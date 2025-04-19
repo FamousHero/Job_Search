@@ -27,14 +27,13 @@ def main():
     foundation_fp = os.environ.get('FOUNDATION_FILE') 
     markdown_fp = os.environ.get('MD_FILE')
     markdown_entries = _foundation_parser(foundation_fp, visit_token)
-    
     print('\n'+30*'-'+'\n\nUpdating markdown file...')
     _update_markdown_file(markdown_fp, markdown_entries)
     print('\n'+30*'-'+'\n\nComplete!\nTerminating Program...')
 
     sys.exit(0)
 
-def _foundation_parser(filepath: str, visit_token: str):
+def _foundation_parser(filepath: str | None, visit_token: str):
     print(visit_token+'Reading Entries...')
     with open(filepath, 'r+') as foundation:
         lines = []
@@ -49,7 +48,9 @@ def _foundation_parser(filepath: str, visit_token: str):
         lines.append('\n')
         print('End of new entries...\n')
 
-        new_entries = _group_entries(lines) 
+        new_entries: list[str] = []
+        _group_entries(lines, new_entries)
+
         print('Entries Grouped...') 
         print('Formatting...')
         new_markdown_entries = [_create_markdown_entry(e) for e in new_entries]
@@ -65,21 +66,21 @@ def _foundation_parser(filepath: str, visit_token: str):
         foundation.write(data)
         return new_markdown_entries
 
-def _group_entries(lines: list[str]):
-    entries = []
+# Changed this to take output var, might be broken
+def _group_entries(lines: list[str], new_entries: list[str]):
     entry = ''
 
     for line in lines:
         # if blank new-line, entry is complete, append it to list and start new one
         if line == '\n':
-            entries.append(entry)
+            new_entries.append(entry)
             entry = ''    
             continue
         if entry.find('job description opens in a new window'):
             entry = entry.replace('job description opens in a new window', '')
         entry += line
 
-    return entries
+    return new_entries
 def _create_markdown_entry(base_entry: str):
     job_title_prefix = ' * '
     job_title_postfix = '\n'
